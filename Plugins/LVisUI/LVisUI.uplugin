@@ -1,0 +1,19 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "LVisUI",
+	"Description": "Runtime styling for the LVis control panel (WBP_Config)",
+	"Category": "Other",
+	"CreatedBy": "Yoshitsugu Kosaka",
+	"EnabledByDefault": true,
+	"CanContainContent": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "LVisUI",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}

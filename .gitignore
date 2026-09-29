@@ -1,0 +1,23 @@
+# Unreal generated
+Binaries/
+Intermediate/
+Saved/
+DerivedDataCache/
+Build/
+Plugins/*/Binaries/
+Plugins/*/Intermediate/
+
+# IDE / OS
+.vs/
+.idea/
+*.xcworkspace
+*.xcodeproj
+.DS_Store
+
+# Personal / secrets
+.env
+*.env
+Config/User*.ini
+*.local
+*.pem
+*.key
