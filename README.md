@@ -19,7 +19,6 @@ An Unreal Engine 5 template for live visuals and immersive installations. Scenes
 | Engine | **Unreal Engine 5.8** |
 | OS | **macOS** for Syphon output. Everything else in the project is cross‑platform, but Syphon only exists on Mac. |
 | Compiler | **Xcode** on macOS, or Visual Studio 2022 on Windows. The two bundled plugins ship as C++ source and get compiled the first time you open the project. |
-| Git | [Git LFS](https://git-lfs.com) is recommended if you fork this and add large assets. |
 
 Engine plugins the project enables: OSC, MIDIDevice, PCG, Water, Buoyancy, HDRIBackdrop, Modeling Tools, plus a few Experimental ones (WaterAdvanced, ProceduralVegetationEditor, ModelContextProtocol, Terminal, EditorToolset). All of them ship with the engine, so there is nothing extra to install.
 
