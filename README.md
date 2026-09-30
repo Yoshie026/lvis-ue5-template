@@ -2,7 +2,7 @@
 
 ![LVis running a scene](Docs/Images/hero.png)
 
-An Unreal Engine 5 template for audio‑reactive live visuals. Scenes react to audio analysis, MIDI and OSC sent from outside the engine, and the rendered output is shared to other apps (VJ software, projection mapping, OBS…) through **Syphon** on macOS.
+An Unreal Engine 5 template for live visuals and immersive installations. Scenes respond to OSC, MIDI and audio sent from outside the engine, and the rendered output is shared to other apps (VJ software, projection mapping, OBS…) through **Syphon** on macOS.
 
 - **OSC control:** audio bands, kicks/hits, MIDI values, scene and camera switching all come in over OSC.
 - **Reactive actor base class:** make a child of `BP_ReactiveActorBase`, tick which inputs it should react to, and implement the events.
@@ -82,7 +82,7 @@ The OSC server is created in `BP_Config`, listening on `0.0.0.0`. The port is se
 | `/camera/mode` `/camera/pos` | Camera mode and preset position |
 | `/system` | System commands |
 
-You can send these from the bundled [LVis Controller](#lvis-controller-no-maxmsp-needed) or from any OSC tool: TouchDesigner, Max/MSP, Ableton + Max for Live, TouchOSC, or a small Python script using `python-osc`.
+You can send these from the bundled [LVis Controller] or from any OSC tool: TouchDesigner, Max/MSP, Ableton + Max for Live, TouchOSC, or a small Python script using `python-osc`.
 
 ```python
 from pythonosc.udp_client import SimpleUDPClient
@@ -170,10 +170,6 @@ To receive it, choose the server in Resolume, MadMapper, VDMX, Millumin, or in O
 **Packaged‑build flag:** start the app with `-LVisNoAudio` to skip the CoreAudio output device. Use it for visuals‑only machines where the audio analysis arrives over OSC; it avoids crashes when macOS audio stalls.
 
 ---
-
-## Assets not included
-
-Several Fab/Marketplace packs used during development are left out of the repo (see `.gitignore`), because of their licenses and their size: `CommonHazel`, `Megaplant_Library`, `PN_*Foliage*`, `SoulCave`, `UltraDynamicSky`, `FluidFlux`, `RockEnv_Pack`, `EasyAtmos`, `HighPoly_Tree_Model`. The template does not depend on them. If you own them, add them through Fab as usual.
 
 ## License
 
