@@ -40,6 +40,14 @@ public:
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Syphon")
    bool bRenderAppWindow = false;
 
+   // While publishing (window black), show the current scene's name centered in the app window.
+   // With Syphon off (standalone) the window stays clean: stats and on-screen debug text are hidden.
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Syphon")
+   bool bShowSceneNameWhilePublishing = true;
+
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Syphon", meta = (ClampMin = "8", ClampMax = "200"))
+   int32 SceneNameFontSize = 48;
+
    UFUNCTION(BlueprintCallable, Category = "Syphon")
    void StartServer();
    UFUNCTION(BlueprintCallable, Category = "Syphon")
@@ -74,6 +82,15 @@ private:
    void RenderOutputView();
    // Turns the app window's own 3D view on/off (off: no world render and no player view setup)
    void UpdateAppWindowRendering(bool bRender);
+   // Scene-name label while publishing; clean screen (no stats / debug text) while standalone
+   void UpdateWindowOverlay(bool bPublishingNow);
+   FString FindCurrentSceneName() const;
+
+   TSharedPtr<class SWidget> SceneNameOverlay;
+   FString CurrentSceneName;
+   TArray<FString> StatsHiddenForStandalone;
+   bool bDebugMessagesBeforeStandalone = true;
+   bool bStandaloneClean = false;
 
    FDelegateHandle PostActorTickHandle;
    // Persistent per-view history (TSR, Lumen, eye adaptation, occlusion) for the output view

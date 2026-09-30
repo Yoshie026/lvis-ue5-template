@@ -13,6 +13,9 @@ public class SyphonLink : ModuleRules
         // BeginRenderingViewFamily for rendering the player view into the Syphon target
         PrivateDependencyModuleNames.Add("Renderer");
 
+        // Scene-name overlay on the app window while publishing
+        PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
+
         if (Target.Platform == UnrealTargetPlatform.Mac)
         {
             PublicFrameworks.AddRange(new string[] { "Metal", "IOSurface" });

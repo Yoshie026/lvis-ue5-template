@@ -14,6 +14,11 @@
 #include "SceneViewExtension.h"
 #include "RenderingThread.h"
 #include "ImageUtils.h"
+#include "Engine/LevelStreaming.h"
+#include "Styling/CoreStyle.h"
+#include "Widgets/Layout/SBox.h"
+#include "Widgets/Layout/SScaleBox.h"
+#include "Widgets/Text/STextBlock.h"
 #include "UnrealClient.h"
 #include "Misc/Paths.h"
 #if PLATFORM_MAC
@@ -120,6 +125,15 @@ void USyphonServerComponent::StopServer()
    PostActorTickHandle.Reset();
 
    UpdateAppWindowRendering(true);
+   UpdateWindowOverlay(false);
+   if (UWorld *World = GetWorld())
+   {
+      if (UGameViewportClient *GameViewport = World->GetGameViewport(); GameViewport && SceneNameOverlay.IsValid())
+      {
+         GameViewport->RemoveViewportWidgetContent(SceneNameOverlay.ToSharedRef());
+      }
+   }
+   SceneNameOverlay.Reset();
 
    // Let any in-flight render/publish finish before the target and server go away
    FlushRenderingCommands();
@@ -149,6 +163,20 @@ void USyphonServerComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 {
    Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 #if PLATFORM_MAC
+   // Started with Syphon off: start publishing once it's switched on, and keep the standalone
+   // window clean meanwhile (once running, OnWorldPostActorTick handles both states)
+   if (!PostActorTickHandle.IsValid())
+   {
+      if (bEnabled)
+      {
+         StartServer();
+      }
+      else
+      {
+         UpdateWindowOverlay(false);
+      }
+   }
+
    if (bShowDebug && GEngine && PostActorTickHandle.IsValid())
    {
       int32 W, H;
@@ -167,6 +195,7 @@ void USyphonServerComponent::OnWorldPostActorTick(UWorld *InWorld, ELevelTick Ti
    {
       // Runs before the window draws this frame, so a runtime bRenderAppWindow toggle applies at once
       UpdateAppWindowRendering(bRenderAppWindow || CVarSyphonForceRenderAppWindow.GetValueOnGameThread() != 0 || !bEnabled || GIsEditor);
+      UpdateWindowOverlay(bEnabled);
       if (bEnabled && CVarSyphonSkipOutputView.GetValueOnGameThread() == 0)
       {
          RenderOutputView();
@@ -217,6 +246,91 @@ void USyphonServerComponent::UpdateAppWindowRendering(bool bRender)
    else if (Players.Num() > 0 && Players[0] && Players[0]->Size.IsZero())
    {
       GameViewport->LayoutPlayers();
+   }
+}
+
+FString USyphonServerComponent::FindCurrentSceneName() const
+{
+   // The newest streamed-in level that is staying loaded (the old one is marked for unload
+   // during a scene change); its world asset is the original map, e.g. Scene_01
+   const UWorld *World = GetWorld();
+   const ULevelStreaming *Current = nullptr;
+   if (World)
+   {
+      for (const ULevelStreaming *Streaming : World->GetStreamingLevels())
+      {
+         if (Streaming && Streaming->ShouldBeLoaded() && Streaming->IsLevelVisible())
+         {
+            Current = Streaming;
+         }
+      }
+   }
+   return Current ? Current->GetWorldAsset().GetAssetName() : FString();
+}
+
+void USyphonServerComponent::UpdateWindowOverlay(bool bPublishingNow)
+{
+   UWorld *World = GetWorld();
+   UGameViewportClient *GameViewport = World ? World->GetGameViewport() : nullptr;
+   if (GIsEditor || !GameViewport)
+   {
+      return;
+   }
+
+   // Scene name, centered on the black window while publishing
+   if (bShowSceneNameWhilePublishing && !SceneNameOverlay.IsValid())
+   {
+      TWeakObjectPtr<USyphonServerComponent> WeakThis(this);
+      SceneNameOverlay =
+          SNew(SScaleBox)
+              .Stretch(EStretch::ScaleToFit)
+              .StretchDirection(EStretchDirection::DownOnly)
+              .Visibility(EVisibility::Collapsed)
+                  [SNew(SBox)
+                       .HAlign(HAlign_Center)
+                       .VAlign(VAlign_Center)
+                       .Padding(FMargin(24.f))
+                           [SNew(STextBlock)
+                                .Font(FCoreStyle::GetDefaultFontStyle("Bold", SceneNameFontSize))
+                                .ColorAndOpacity(FLinearColor(1.f, 1.f, 1.f, 0.85f))
+                                .Text_Lambda([WeakThis]()
+                                             { return FText::FromString(WeakThis.IsValid() ? WeakThis->CurrentSceneName : FString()); })]];
+      GameViewport->AddViewportWidgetContent(SceneNameOverlay.ToSharedRef(), 10);
+   }
+   if (SceneNameOverlay.IsValid())
+   {
+      if (bPublishingNow)
+      {
+         CurrentSceneName = FindCurrentSceneName();
+      }
+      const bool bShow = bPublishingNow && bShowSceneNameWhilePublishing && !CurrentSceneName.IsEmpty();
+      SceneNameOverlay->SetVisibility(bShow ? EVisibility::HitTestInvisible : EVisibility::Collapsed);
+   }
+
+   // Standalone (Syphon off): keep the window clean - no stat overlays, no on-screen debug text.
+   // Stats enabled meanwhile (e.g. by a Blueprint "stat fps") are cleared every frame; the ones
+   // that were showing come back when publishing resumes.
+   if (!bPublishingNow)
+   {
+      if (!bStandaloneClean)
+      {
+         const TArray<FString> *Enabled = GameViewport->GetEnabledStats();
+         StatsHiddenForStandalone = Enabled ? *Enabled : TArray<FString>();
+         bDebugMessagesBeforeStandalone = GEngine->bEnableOnScreenDebugMessages;
+         bStandaloneClean = true;
+      }
+      const TArray<FString> *Enabled = GameViewport->GetEnabledStats();
+      if (Enabled && Enabled->Num() > 0)
+      {
+         GameViewport->SetEnabledStats(TArray<FString>());
+      }
+      GEngine->bEnableOnScreenDebugMessages = false;
+   }
+   else if (bStandaloneClean)
+   {
+      GameViewport->SetEnabledStats(StatsHiddenForStandalone);
+      GEngine->bEnableOnScreenDebugMessages = bDebugMessagesBeforeStandalone;
+      bStandaloneClean = false;
    }
 }
 

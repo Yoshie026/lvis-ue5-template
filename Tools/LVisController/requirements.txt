@@ -1,0 +1,6 @@
+numpy
+python-osc
+sounddevice
+mido
+python-rtmidi
+windows-curses; sys_platform == "win32"
