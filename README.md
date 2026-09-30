@@ -1,6 +1,6 @@
 # LVis — UE5 Live Visuals Template
 
-![LVis running a scene](Docs/Images/hero.png)
+![LVis running a scene](Docs/Images/hero.gif)
 
 An Unreal Engine 5 template for live visuals and immersive installations. Scenes respond to OSC, MIDI and audio sent from outside the engine, and the rendered output is shared to other apps (VJ software, projection mapping, OBS…) through **Syphon** on macOS.
 
